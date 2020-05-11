@@ -1,0 +1,99 @@
+---
+title: "simulation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<br>
+<br>
+<br>
+
+X a une loi de densité f et une fonction de répartition associée F, si F est inversible, on peut utiliser un changement de variable U = F(X), où U est une variable aléatoire de loi U[0,1].
+
+## Démonstration :
+
+<br>
+
+$$P(U \leq k) = P(F(X) \leq u) = P[F^{-1}((F(X)) \leq F^{-1}((F(x))] = P(X \leq x) $$
+
+Avec la loi $Exp(\lambda)$ avec $\lambda > 0$, F(x) = 1-exp- $\lambda$x $\mathbb{1}_{x>0}$, la fonction inverse est  $$ x = - \dfrac{ln(1-y)}{\lambda} $$, donc si  U -> U[0,1] alors :
+
+<br>
+
+ $$ X = - \dfrac{ln(1-U)}{\lambda} = \dfrac{ln(U)}{\lambda}  $$
+
+```{r bijective}
+n = 1000000
+U = runif(n)
+# loi exponentielle de paramètre 1
+
+## Création de notre loi
+lambda = 1
+X = -log(U) / lambda
+
+## loi exponentielle sous R
+Y = rexp(n)
+
+par(mfrow=c(1,2))
+hist(X,freq=F,main="inversion de U", col="lightblue")
+hist(Y,freq=F,main="loi exp dans R", col="red")
+```
+
+La loi normale n'est pas bijective, on ne peut donc pas la simuler avec cette méthode. On va utiliser la méthode de Box-Muller :
+
+
+Soient U1, U2 -> U[0,1] iid, on définit X1 et X2 par :
+X1 = $\sqrt{-2ln(U1)}cos(\pi 2 U2)$ et X2 = $\sqrt{-2ln(U2)}cos(\pi 2 U1)$ alors X1, X2 -> N(O,1) et sont iid
+
+## Démonstration :
+
+$$ E[f(X,Y)]= \frac{1}{2\pi} \int_{R}\int_{R}exp-\frac{x^{2}+y^{2}}{2}f(x,y)dx dy$$
+$$ E[f(X,Y)]= \frac{1}{2\pi} \int_{0}^{2\pi}\int_{0}^{\infty}r exp(-\frac{r^{2}}{2})f(rcos\theta,rsin\theta)d\theta dr$$
+$$ E[f(X,Y)]=  \int_{0}^{1}\int_{0}^{1}f[\sqrt{-2ln(u)}cos(\pi 2 v ),\sqrt{-2ln(v)}cos(\pi 2 u )]du dv$$
+$$ E[f(X,Y)]=  E[\sqrt{-2ln(U)}cos(\pi 2 V ),\sqrt{-2ln(V)}cos(\pi 2 U )]$$
+
+```{r box_muller}
+
+n = 1000000
+m = 0
+sigma = 1
+U1 = runif(n)
+U2 = runif(n)
+X3 = rnorm(n , mean = m, sd = sigma)
+X1 = m+sigma*sqrt(-2*log(U1))*cos(2*pi*U2)
+X2 = m+sigma*sqrt(-2*log(U2))*cos(2*pi*U1)
+
+par(mfrow=c(1,3))
+hist(X1,col = "lightblue")
+hist(X2,col = "red")
+hist(X3,col = "grey")
+```
+
+## Monte Carlo
+
+$X_{i}$ une suite iid, d'après la loi forte des grands nombres, $\frac{1}{n} \sum_{1}^{n} g(X_{i}) --> E[g(X1)].
+
+Vérifions avec le premier exemple :
+
+```{r monte_carlo}
+
+# monte carlo pour une variable exponentielle
+
+I <- function(N,lambda) sum(-log(runif(N))/lambda)/N
+
+N1=1000
+N2=10000
+N3=100000
+N4=1000000
+lambda = 1
+I(N1,lambda)
+I(N2,lambda)
+I(N3,lambda)
+I(N4,lambda)
+
+# convergence vers 1
+
+```
